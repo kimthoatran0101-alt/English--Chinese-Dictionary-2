@@ -304,7 +304,7 @@
 
     <div id="result">
         <div style="text-align: center; color: #999; padding: 60px;">
-            <h2>Hệ thống đã sẵn sàng! Hãy gõ từ khóa rồi ấn Enter hoặc nút 搜尋 để xem kết quả.</h2>
+            <h2></h2>
         </div>
     </div>
 </div>
@@ -512,7 +512,7 @@ function showWord(wordKey) {
 
             <div class="extra-info-grid">
                 <div class="info-card">
-                    <h4>✍️ Stroke Order (Bút thuận)</h4><br>
+                    <h4>✍️ Stroke Order </h4><br>
                     <div id="writer-area"></div>
                 </div>
                 <div class="info-card">
@@ -530,7 +530,7 @@ function showWord(wordKey) {
             </div>
 
             <div class="nuance-box">
-                <span class="nuance-title">🔍 Semantic Nuances (Phân biệt ngữ nghĩa)</span>
+                <span class="nuance-title">🔍 Semantic Nuances </span>
                 <div>${data.nuance}</div>
             </div>
 
