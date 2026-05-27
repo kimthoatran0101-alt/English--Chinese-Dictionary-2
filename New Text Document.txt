@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業漢英詞典 - Professional Chinese-English Dictionary</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        :root {
+            --primary: #1d2a44;
+            --accent: #d12127;
+            --bg: #f4f7f9;
+            --english-blue: #007bff;
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-box {
+            flex: 1;
+            padding: 15px 25px;
+            border: 2px solid var(--primary);
+            border-radius: 30px;
+            font-size: 18px;
+            outline: none;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .search-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .search-btn:hover {
+            background: #2c3e50;
+        }
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            width: 100%;
+            z-index: 10;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-top: none;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 12px 25px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .suggestion-item:hover {
+            background: #f0f7ff;
+            color: var(--accent);
+        }
+        .word-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+        .word-title {
+            font-size: 56px;
+            color: var(--primary);
+            margin: 0;
+            font-weight: bold;
+        }
+        .phonetic-group {
+            text-align: right;
+        }
+        .pinyin {
+            font-size: 22px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .zhuyin {
+            font-size: 18px;
+            color: #555;
+            background: #fff1f1;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .ipa-tag {
+            display: inline-block;
+            background: #eee;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+        .extra-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .info-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .info-card h4 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+        }
+        .hanzi-writer-container {
+            display: inline-block;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+            margin-right: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .pos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .pos-item {
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+        }
+        .v { background: #e3f2fd; }
+        .n { background: #e8f5e9; }
+        .adj { background: #fff3e0; }
+        .adv { background: #f3e5f5; }
+        .pos-label {
+            font-weight: bold;
+            font-size: 13px;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .nuance-box {
+            background: #fff4f4;
+            border: 1px solid #ffdada;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .nuance-title {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #ffdada;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .image-box {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .word-img {
+            width: 100%;
+            max-width: 450px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .audio-group {
+            margin: 15px 0;
+        }
+        .audio-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .audio-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .quiz-section {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+        .quiz-question {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+        }
+        .quiz-option:hover {
+            background: #dcdde1;
+        }
+        .score-board {
+            font-size: 22px;
+            color: #2ecc71;
+            text-align: center;
+            margin-top: 20px;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+        .error-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>華英電子詞典 </h1>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-box" id="search" placeholder="Nhập từ khóa và ấn Enter..." oninput="handleSuggest()">
+        <button class="search-btn" onclick="executeSearch()">搜尋</button>
+        <div id="suggest" class="suggestion-box"></div>
+    </div>
+
+    <div id="result">
+        <div style="text-align: center; color: #999; padding: 60px;">
+            <h2>Hệ thống đã sẵn sàng! Hãy gõ từ khóa rồi ấn Enter hoặc nút 搜尋 để xem kết quả.</h2>
+        </div>
+    </div>
+</div>
+
+<script>
+let totalScore = 0;
+
+// Hệ thống cơ sở dữ liệu ẩn hoàn chỉnh
+const dictionary = {
+  "學習": {
+    pinyin: "xué xí",
+    zhuyin: "ㄒㄩㄝˊ ㄒㄧˊ",
+    ipa: "[ɕɥɛ˧˥ ɕi˧˥]",
+    englishIpa: "/ˈstʌdi/ & /ˈlɜːrn/",
+    searchKeywords: ["study", "learn", "studying", "learning", "xuexi"],
+    image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600",
+    wordFamily: ["Student (學生)", "School (學校)", "Scholar (學者)", "Academic (學術)"]
+    synonyms: "研習 (To study), 修習 (To take a course), 鑽研 (To delve into)",
+    antonyms: "荒廢 (To neglect), 怠惰 (Idle)",
+    idioms: ["學而時習之 (Learn and practice constantly)", "學無止境 (Knowledge has no limit)"],
+    pos: {
+      v: { en: "To study / To learn", ex: "我們應該不斷學習新知識。(We should constantly learn new knowledge.)" },
+      n: { en: "Study / Learning", ex: "他在學習上遇到了困難。(He encountered difficulties in his studies.)" },
+      adj: { en: "Academic / Learning-related", ex: "營造良好的學習氛圍。(Create a good learning atmosphere.)" },
+      adv: { en: "Academically", ex: "在學習方面，他表現優異。(Academically, he performs excellently.)" }
+    },
+    nuance: "<b>Study vs. Learn:</b><br>1. <b>Study</b> focuses on the process: reading, researching, or attending class.<br>2. <b>Learn</b> focuses on the outcome: mastering a skill or acquiring knowledge.",
+    quiz: [
+      { q: "Which IPA tone number represents the 2nd tone in '學習'?", a: ["55", "35", "214"], c: 1 },
+      { q: "What is the Zhuyin for the first character '學'?", a: ["ㄒㄧˊ", "ㄒㄩㄝˊ", "ㄈㄚ"], c: 1 },
+      { q: "Which idiom means 'Knowledge has no limit'?", a: ["學而時習之", "學無止境", "蒸蒸日上"], c: 1 }
+    ]
+  },
+  "發展": {
+    pinyin: "fā zhǎn",
+    zhuyin: "ㄈㄚ ㄓㄢˇ",
+    ipa: "[fa˥ ʈʂan˨˩˦]",
+    englishIpa: "/dɪˈveləp/ & /ˈɡroʊθ/",
+    searchKeywords: ["develop", "development", "growth", "grow", "fazhan"],
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600",
+    wordFamily: ["Developer (開發者)", "Evolution (演變)", "Sustainability (永續性)"]
+    synonyms: "發育 (To grow), 開發 (To develop/exploit), 擴展 (To expand)",
+    antonyms: "倒退 (To regress), 萎縮 (To shrink), 停滯 (Stagnate)",
+    idioms: ["全面發展 (All-round development)", "可持續發展 (Sustainable development)"],
+    pos: {
+      v: { en: "To develop / To expand", ex: "這家公司發展得很快。(This company is developing very fast.)" },
+      n: { en: "Development / Growth", ex: "經濟的發展改變了人們的生活。(Economic development has changed people's lives.)" },
+      adj: { en: "Developing / Developmental", ex: "發展中國家面臨著許多挑戰。(Developing countries face many challenges.)" },
+      adv: { en: "In terms of development", ex: "城鎮在發展上... (Towns need long-term planning.)" }
+    },
+    nuance: "<b>發展 (Develop) vs. 生長 (Grow):</b><br>1. <b>發展</b> is broad and can apply to abstract concepts.<br>2. <b>生長</b> usually implies physical growth of biological organisms.",
+    quiz: [
+      { q: "What is the Pinyin for '發展'?", a: ["fā zhǎn", "fá zhàn", "fā zhān"], c: 0 },
+      { q: "Which part of speech can '發展' be used as?", a: ["Verb only", "Noun only", "Both Noun and Verb"], c: 2 }
+    ]
+  },
+  "打算": {
+    pinyin: "dǎ suàn",
+    zhuyin: "ㄉㄚˇ ㄙㄨㄢˋ",
+    ipa: "[ta˨˩˦ swu̯an˥˩]",
+    englishIpa: "/plæn/ & /ɪnˈtend/",
+    searchKeywords: ["plan", "intend", "intention", "planning", "dasuan"],
+    image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=600",
+    wordFamily: ["Planning (規劃)", "Calculation (計算)", "Budget (預算)"],
+    synonyms: "計劃 (To plan), 企圖 (To attempt), 準備 (To prepare)",
+    antonyms: "盲目 (Blindly), 隨意 (Randomly)",
+    idioms: ["如意算盤 (Wishful thinking)"],
+    pos: {
+      v: { en: "To plan / To intend", ex: "你畢業以後打算做什麼？(What do you plan to do after graduation?)" },
+      n: { en: "Plan / Intention", ex: "你心裡有什麼打算？(What kind of plans do you have in mind?)" },
+      adj: { en: "Planned (Informal)", ex: "這是一筆打算好的開銷。(This is a planned expense.)" },
+      adv: { en: "Intentionally", ex: "他本來就打算這麼做。(He intended to do it this way.)" }
+    },
+    nuance: "<b>打算 (Dǎsuàn) vs. 計劃 (Jìhuà):</b><br>1. <b>打算</b> is more casual and common in spoken Chinese.<br>2. <b>計劃</b> is more formal, structured, and long-term.",
+    quiz: [
+      { q: "Which English word matches '打算'?", a: ["Forget", "Plan", "History"], c: 1 },
+      { q: "What tone is the character '算' (suàn)?", a: ["1st tone", "3rd tone", "4th tone"], c: 2 }
+    ]
+  }
+};
+
+// KỸ THUẬT SỬA LỖI ENTER CHUẨN XÁC: Lắng nghe sự kiện bằng addEventListener
+document.getElementById("search").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault(); // Chặn hành vi submit làm reload trang vô lý
+        executeSearch();        // Chạy hàm tìm kiếm
+    }
+});
+
+// Logic thực thi tìm kiếm nâng cao (Dữ liệu ẩn hoàn toàn)
+function executeSearch() {
+    const query = document.getElementById("search").value.trim().toLowerCase();
+    const suggestBox = document.getElementById("suggest");
+    suggestBox.style.display = "none"; 
+
+    if (!query) return;
+
+    // 1. So khớp trực tiếp chữ Hán tự
+    for (let key in dictionary) {
+        if (query === key.toLowerCase()) {
+            showWord(key);
+            return;
+        }
+    }
+
+    // 2. So khớp Pinyin viết liền hoặc từ khóa mảng mở rộng tiếng Anh
+    for (let key in dictionary) {
+        const cleanPinyin = dictionary[key].pinyin.toLowerCase().replace(/\s+/g, "");
+        if (query === cleanPinyin || dictionary[key].searchKeywords.includes(query)) {
+            showWord(key);
+            return;
+        }
+    }
+
+    // 3. Tìm kiếm gần đúng (Fuzzy search)
+    for (let key in dictionary) {
+        const cleanPinyin = dictionary[key].pinyin.toLowerCase().replace(/\s+/g, "");
+        if (key.includes(query) || cleanPinyin.includes(query) || dictionary[key].searchKeywords.some(k => k.includes(query))) {
+            showWord(key);
+            return;
+        }
+    }
+
+    // Trạng thái lỗi khi không tìm thấy
+    document.getElementById("result").innerHTML = `
+        <div class="word-card error-state">
+            <h2>抱歉！找不到相關結果</h2>
+            <p>Từ khóa "<b>${query}</b>" không có trong hệ thống dữ liệu ẩn. Vui lòng gõ chính xác: <b>study, develop, plan, 學習, 發展, 打算</b>.</p>
+        </div>
+    `;
+}
+
+// Xử lý hộp gợi ý (dropdown menu) khi đang gõ chữ
+function handleSuggest() {
+    const query = document.getElementById("search").value.trim().toLowerCase();
+    const suggestBox = document.getElementById("suggest");
+    suggestBox.innerHTML = "";
+    
+    if (!query) {
+        suggestBox.style.display = "none";
+        return;
+    }
+    
+    let matches = [];
+    for (let key in dictionary) {
+        const cleanPinyin = dictionary[key].pinyin.toLowerCase().replace(/\s+/g, "");
+        if (key.includes(query) || cleanPinyin.includes(query) || dictionary[key].searchKeywords.some(k => k.includes(query))) {
+            matches.push(key);
+        }
+    }
+    
+    if (matches.length > 0) {
+        suggestBox.style.display = "block";
+        matches.forEach(word => {
+            const item = document.createElement("div");
+            item.className = "suggestion-item";
+            item.innerHTML = `<span><b>${word}</b> (${dictionary[word].pinyin})</span><span style='color:#666;font-size:13px;'>${dictionary[word].searchKeywords[0]}</span>`;
+            item.onclick = () => {
+                document.getElementById("search").value = word;
+                suggestBox.style.display = "none";
+                showWord(word);
+            };
+            suggestBox.appendChild(item);
+        });
+    } else {
+        suggestBox.style.display = "none";
+    }
+}
+
+// Hàm render dựng cấu trúc HTML động từ kho lưu trữ ẩn
+function showWord(wordKey) {
+    const data = dictionary[wordKey];
+    const resultDiv = document.getElementById("result");
+    
+    let quizHtml = "";
+    if (data.quiz && data.quiz.length > 0) {
+        quizHtml = `<div class="quiz-section"><h3>📊 Quick Quiz / Mini Test</h3>`;
+        data.quiz.forEach((q, qIdx) => {
+            quizHtml += `<div class="quiz-question"><p><b>Q${qIdx + 1}: ${q.q}</b></p>`;
+            q.a.forEach((opt, oIdx) => {
+                quizHtml += `<button class="quiz-option" onclick="checkQuiz(this, ${qIdx}, ${oIdx}, ${q.c}, '${wordKey}')">${opt}</button>`;
+            });
+            quizHtml += `</div>`;
+        });
+        quizHtml += `<div class="score-board" id="score-${wordKey}">Current Session Score: 0</div></div>`;
+    }
+
+    resultDiv.innerHTML = `
+        <div class="word-card">
+            <div class="header-flex">
+                <div>
+                    <h2 class="word-title">${wordKey}</h2>
+                    <div class="audio-group">
+                        <button class="audio-btn" onclick="speak('${wordKey}')">🔊 Speak (CN)</button>
+                        <button class="audio-btn" onclick="speak('${data.searchKeywords[0]}', 'en-US')">🔊 Speak (EN)</button>
+                    </div>
+                </div>
+                <div class="phonetic-group">
+                    <div class="pinyin">${data.pinyin}</div>
+                    <div class="zhuyin">${data.zhuyin}</div><br>
+                    <div class="ipa-tag">CN IPA: ${data.ipa}</div><br>
+                    <div class="ipa-tag" style="background:#e3f2fd;color:#007bff">EN IPA: ${data.englishIpa}</div>
+                </div>
+            </div>
+
+            <div class="extra-info-grid">
+                <div class="info-card">
+                    <h4>✍️ Stroke Order (Bút thuận)</h4><br>
+                    <div id="writer-area"></div>
+                </div>
+                <div class="info-card">
+                    <h4>🌿 Word Family & Context</h4>
+                    <ul>${data.wordFamily.map(f => `<li>${f}</li>`).join('')}</ul>
+                </div>
+            </div>
+
+            <h3>💡 Parts of Speech & Academic Context</h3>
+            <div class="pos-grid">
+                ${data.pos.v ? `<div class="pos-item v"><span class="pos-label">VERB (動詞)</span><b>${data.pos.v.en}</b><p style="margin:5px 0 0 0; font-style:italic;">${data.pos.v.ex}</p></div>` : ''}
+                ${data.pos.n ? `<div class="pos-item n"><span class="pos-label">NOUN (名詞)</span><b>${data.pos.n.en}</b><p style="margin:5px 0 0 0; font-style:italic;">${data.pos.n.ex}</p></div>` : ''}
+                ${data.pos.adj ? `<div class="pos-item adj"><span class="pos-label">ADJECTIVE (形容詞)</span><b>${data.pos.adj.en}</b><p style="margin:5px 0 0 0; font-style:italic;">${data.pos.adj.ex}</p></div>` : ''}
+                ${data.pos.adv ? `<div class="pos-item adv"><span class="pos-label">ADVERB (副詞)</span><b>${data.pos.adv.en}</b><p style="margin:5px 0 0 0; font-style:italic;">${data.pos.adv.ex}</p></div>` : ''}
+            </div>
+
+            <div class="nuance-box">
+                <span class="nuance-title">🔍 Semantic Nuances (Phân biệt ngữ nghĩa)</span>
+                <div>${data.nuance}</div>
+            </div>
+
+            <div class="extra-info-grid">
+                <div class="info-card" style="border-left: 4px solid #2ecc71;">
+                    <b style="color:#2ecc71;">Synonyms (近義詞):</b> ${data.synonyms}<br><br>
+                    <b style="color:#e74c3c;">Antonyms (反義詞):</b> ${data.antonyms}
+                </div>
+                <div class="info-card" style="border-left: 4px solid #f1c40f;">
+                    <b style="color:#d3a002;">Idioms / Sayings (成語俗語):</b>
+                    <ul>${data.idioms.map(i => `<li>${i}</li>`).join('')}</ul>
+                </div>
+            </div>
+
+            <div class="image-box">
+                <img src="${data.image}" class="word-img" alt="${wordKey}">
+            </div>
+
+            <div class="video-container">
+                <iframe src="${data.videoUrl}" allowfullscreen></iframe>
+            </div>
+
+            ${quizHtml}
+        </div>
+    `;
+
+    // Gọi thư viện vẽ thứ tự nét chữ từ API HanziWriter bên ngoài vào vùng ẩn vừa hiển thị
+    wordKey.split("").forEach(char => {
+        const span = document.createElement("span");
+        span.className = "hanzi-writer-container";
+        document.getElementById("writer-area").appendChild(span);
+        const writer = HanziWriter.create(span, char, {
+            width: 80,
+            height: 80,
+            padding: 5,
+            strokeColor: '#d12127',
+            showOutline: true
+        });
+        span.onclick = () => writer.animateCharacter();
+        writer.animateCharacter();
+    });
+}
+
+// Chức năng phát âm Audio
+function speak(text, lang = 'zh-CN') {
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = lang;
+    window.speechSynthesis.speak(msg);
+}
+
+// Chấm điểm Quiz trắc nghiệm ngắn
+function checkQuiz(btn, qIdx, oIdx, correctIdx, wordKey) {
+    const parent = btn.parentElement;
+    const options = parent.querySelectorAll(".quiz-option");
+    
+    options.forEach(opt => opt.disabled = true);
+    
+    if (oIdx === correctIdx) {
+        btn.style.background = "#2ecc71";
+        btn.style.color = "white";
+        totalScore += 10;
+    } else {
+        btn.style.background = "#e74c3c";
+        btn.style.color = "white";
+        options[correctIdx].style.background = "#2ecc71";
+        options[correctIdx].style.color = "white";
+    }
+    document.getElementById(`score-${wordKey}`).innerText = `Current Session Score: ${totalScore}`;
+}
+
+// Click chuột bên ngoài vùng search sẽ đóng dropdown menu
+document.addEventListener("click", function(e) {
+    if (e.target.id !== "search") {
+        document.getElementById("suggest").style.display = "none";
+    }
+});
+</script>
+
+</body>
+</html>
